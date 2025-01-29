@@ -113,7 +113,7 @@ const Index = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "gpt-4",
+            model: "gpt-4o",
             messages: [
               {
                 role: "system",
@@ -127,7 +127,6 @@ const Index = () => {
                 )}\n\nReturn the top 20 people who are the best potential fits for this role, with a half line explanation why. Respond with nothing else but a json array of { name: string; explanation: string} with no formatting or line breaks.`,
               },
             ],
-            max_tokens: 824,
             stream: false,
           }),
         }
@@ -142,7 +141,7 @@ const Index = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "gpt-4",
+            model: "gpt-4o",
             messages: [
               {
                 role: "system",
@@ -156,7 +155,6 @@ const Index = () => {
                 )}\n\nReturn the top 20 people who might make the best referrals for this role, with a half line explanation why. Respond with nothing else but a json array of { name: string; explanation: string} with no formatting or line breaks.`,
               },
             ],
-            max_tokens: 824,
             stream: false,
           }),
         }
