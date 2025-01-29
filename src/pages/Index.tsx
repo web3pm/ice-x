@@ -5,83 +5,18 @@ import { Button } from "@/components/ui/button";
 import FileUpload from "@/components/FileUpload";
 import ResultsList from "@/components/ResultsList";
 import { useToast } from "@/components/ui/use-toast";
-import { DEFAULT_JOB_DESCRIPTION } from "@/constants/defaults";
-
-interface NetworkData {
-  attestation: {
-    path: string;
-    uid: string;
-    signature: {
-      v: number;
-      r: string;
-      s: string;
-    };
-    data: string;
-    timestamp: number;
-  };
-  pkid: string;
-  date: string;
-  profiles: Array<{
-    source: string;
-    profileID: string;
-    userPKID: string;
-    primaryWalletAddress: string;
-    displayName: string;
-    avatarUrl: string;
-    bio: string;
-    channels: Array<{
-      type: string;
-      visibility: string;
-      isVerified: boolean;
-      value: string;
-    }>;
-    credentials: Array<any>;
-    ordinalities: {
-      aggregate: number;
-    };
-    counts: {
-      icebreakerConnections: number;
-      icebreakerMutuals: number;
-      farcasterFollowers: number;
-      farcasterMutuals: number;
-    };
-    connectionDate: string;
-  }>;
-}
-
-interface FilteredProfile {
-  displayName: string;
-  bio: string;
-  channels: Array<{
-    type: string;
-    value: string;
-  }>;
-  connectionDate: string;
-}
-
-const filterProfileData = (
-  profiles: NetworkData["profiles"]
-): FilteredProfile[] => {
-  return profiles.map((profile) => ({
-    displayName: profile.displayName,
-    bio: profile.bio,
-    channels: profile.channels
-      .filter((channel) => channel.visibility === "public")
-      .map(({ type, value }) => ({ type, value })),
-    connectionDate: profile.connectionDate,
-  }));
-};
+import { analyzeNetwork } from "@/utils/networkAnalysis";
+import { Link } from "react-router-dom";
 
 const Index = () => {
-  const [networkData, setNetworkData] = useState<NetworkData | null>(null);
-  const [jobDescription, setJobDescription] = useState(DEFAULT_JOB_DESCRIPTION);
+  const [networkData, setNetworkData] = useState(null);
+  const [prompt, setPrompt] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [matches, setMatches] = useState([]);
-  const [referrals, setReferrals] = useState([]);
+  const [results, setResults] = useState([]);
   const { toast } = useToast();
 
-  const handleFileUpload = (data: NetworkData) => {
+  const handleFileUpload = (data) => {
     setNetworkData(data);
     toast({
       title: "Network data loaded",
@@ -89,8 +24,8 @@ const Index = () => {
     });
   };
 
-  const analyzeNetwork = async () => {
-    if (!networkData || !jobDescription || !apiKey) {
+  const analyzeNetworkData = async () => {
+    if (!networkData || !prompt || !apiKey) {
       toast({
         title: "Missing information",
         description: "Please provide all required information before analyzing",
@@ -102,75 +37,8 @@ const Index = () => {
     setIsLoading(true);
 
     try {
-      const filteredProfiles = filterProfileData(networkData.profiles);
-
-      const matchesPromise = fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "gpt-4o",
-            messages: [
-              {
-                role: "system",
-                content:
-                  "You are a professional recruiter analyzing network connections.",
-              },
-              {
-                role: "user",
-                content: `Given this job description: ${jobDescription}\n\nAnd these network profiles: ${JSON.stringify(
-                  filteredProfiles
-                )}\n\nReturn the top 20 people who are the best potential fits for this role, with a half line explanation why. Respond with nothing else but a json array of { name: string; explanation: string} with no formatting or line breaks.`,
-              },
-            ],
-            stream: false,
-          }),
-        }
-      );
-
-      const referralsPromise = fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "gpt-4o",
-            messages: [
-              {
-                role: "system",
-                content:
-                  "You are a professional recruiter analyzing network connections.",
-              },
-              {
-                role: "user",
-                content: `Given this job description: ${jobDescription}\n\nAnd these network profiles: ${JSON.stringify(
-                  filteredProfiles
-                )}\n\nReturn the top 20 people who might make the best referrals for this role, with a half line explanation why. Respond with nothing else but a json array of { name: string; explanation: string} with no formatting or line breaks.`,
-              },
-            ],
-            stream: false,
-          }),
-        }
-      );
-
-      const [matchesResponse, referralsResponse] = await Promise.all([
-        matchesPromise,
-        referralsPromise,
-      ]);
-
-      const matchesData = await matchesResponse.json();
-      const referralsData = await referralsResponse.json();
-
-      setMatches(JSON.parse(matchesData.choices[0].message.content));
-      setReferrals(JSON.parse(referralsData.choices[0].message.content));
-
+      const results = await analyzeNetwork(apiKey, networkData, prompt);
+      setResults(results);
       toast({
         title: "Analysis complete",
         description: "Successfully analyzed your network",
@@ -179,8 +47,7 @@ const Index = () => {
       console.error("Error:", error);
       toast({
         title: "Error",
-        description:
-          "Failed to analyze network. Please check your API key and try again.",
+        description: "Failed to analyze network. Please check your API key and try again.",
         variant: "destructive",
       });
     } finally {
@@ -191,13 +58,18 @@ const Index = () => {
   return (
     <div className="min-h-screen p-8 max-w-7xl mx-auto space-y-8">
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Network Job Match Analysis
-        </h1>
+        <h1 className="text-3xl font-bold tracking-tight">Network Analysis</h1>
         <p className="text-muted-foreground">
-          Upload your network data and job description to find the best matches
-          and potential referrals.
+          Upload your network data and ask questions about your connections.
         </p>
+        <div className="flex gap-2">
+          <Link
+            to="/jobs"
+            className="text-sm text-blue-500 hover:text-blue-600 underline"
+          >
+            Go to Job Matching
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-8 md:grid-cols-2">
@@ -217,18 +89,18 @@ const Index = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Job Description</label>
+              <label className="text-sm font-medium">Your Question</label>
               <Textarea
-                placeholder="Paste the job description here..."
-                value={jobDescription}
-                onChange={(e) => setJobDescription(e.target.value)}
+                placeholder="Ask a question about your network..."
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
                 className="h-32"
               />
             </div>
 
             <Button
-              onClick={analyzeNetwork}
-              disabled={isLoading || !networkData || !jobDescription || !apiKey}
+              onClick={analyzeNetworkData}
+              disabled={isLoading || !networkData || !prompt || !apiKey}
               className="w-full"
             >
               {isLoading ? (
@@ -245,13 +117,8 @@ const Index = () => {
 
         <div className="space-y-6">
           <ResultsList
-            title="Best Matches"
-            results={matches}
-            isLoading={isLoading}
-          />
-          <ResultsList
-            title="Best Referrals"
-            results={referrals}
+            title="Analysis Results"
+            results={results}
             isLoading={isLoading}
           />
         </div>
