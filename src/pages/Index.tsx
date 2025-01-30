@@ -60,9 +60,11 @@ const Index = () => {
   return (
     <div className="min-h-screen p-8 max-w-7xl mx-auto space-y-8">
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Network Analysis</h1>
+        <h1 className="text-3xl font-bold tracking-tight">
+          Experimental AI Network Helper
+        </h1>
         <p className="text-muted-foreground">
-          Upload your network data and ask questions about your connections.
+          Upload your network from Icebreaker and ask questions using AI.
         </p>
         <div className="flex gap-2">
           <Link
@@ -108,7 +110,7 @@ const Index = () => {
               {isLoading ? (
                 <>
                   <div className="loading-spinner mr-2" />
-                  Analyzing...
+                  Thinking...
                 </>
               ) : (
                 "Analyze Network"
