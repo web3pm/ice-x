@@ -6,7 +6,6 @@ import FileUpload from "@/components/FileUpload";
 import ResultsList from "@/components/ResultsList";
 import { useToast } from "@/components/ui/use-toast";
 import { DEFAULT_JOB_DESCRIPTION } from "@/constants/defaults";
-import { analyzeNetwork } from "@/utils/networkAnalysis";
 
 interface NetworkData {
   attestation: {
@@ -36,6 +35,7 @@ interface NetworkData {
       isVerified: boolean;
       value: string;
     }>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     credentials: Array<any>;
     ordinalities: {
       aggregate: number;
@@ -219,7 +219,7 @@ const Jobs = () => {
               {isLoading ? (
                 <>
                   <div className="loading-spinner mr-2" />
-                  Analyzing...
+                  Thinking...
                 </>
               ) : (
                 "Analyze Network"
