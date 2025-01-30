@@ -1,4 +1,4 @@
-
+export const DEFAULT_PROMPT = `Who are the top 5 people I should talk with this week who are experts in decentralized identity?`;
 
 export const DEFAULT_JOB_DESCRIPTION = `Founding Back-end Engineer
 Icebreaker
@@ -38,4 +38,4 @@ Efficiency, integrity, range, desire to do good, world class talent, optimism, h
 Interested?
 Send a note to hello@icebreaker.xyz with a link to your Icebreaker profile and any verifications / endorsements that show you’re exceptional.
 
-Icebreaker is an equal opportunity employer.`
+Icebreaker is an equal opportunity employer.`;

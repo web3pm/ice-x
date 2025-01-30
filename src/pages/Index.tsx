@@ -7,10 +7,11 @@ import ResultsList from "@/components/ResultsList";
 import { useToast } from "@/components/ui/use-toast";
 import { analyzeNetwork } from "@/utils/networkAnalysis";
 import { Link } from "react-router-dom";
+import { DEFAULT_PROMPT } from "@/constants/defaults";
 
 const Index = () => {
   const [networkData, setNetworkData] = useState(null);
-  const [prompt, setPrompt] = useState("");
+  const [prompt, setPrompt] = useState(DEFAULT_PROMPT);
   const [apiKey, setApiKey] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState([]);
@@ -47,7 +48,8 @@ const Index = () => {
       console.error("Error:", error);
       toast({
         title: "Error",
-        description: "Failed to analyze network. Please check your API key and try again.",
+        description:
+          "Failed to analyze network. Please check your API key and try again.",
         variant: "destructive",
       });
     } finally {
